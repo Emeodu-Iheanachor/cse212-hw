@@ -1,9 +1,20 @@
 public class Person
 {
-    public readonly string Name;
+    /// <summary>
+    /// The person's name
+    /// </summary>
+    public string Name { get; set; }
+
+    /// <summary>
+    /// Number of turns remaining.
+    /// 0 or negative means infinite turns.
+    /// </summary>
     public int Turns { get; set; }
 
-    internal Person(string name, int turns)
+    /// <summary>
+    /// Create a new person with a name and number of turns
+    /// </summary>
+    public Person(string name, int turns)
     {
         Name = name;
         Turns = turns;
@@ -11,6 +22,6 @@ public class Person
 
     public override string ToString()
     {
-        return Turns <= 0 ? $"({Name}:Forever)" : $"({Name}:{Turns})";
+        return $"{Name} ({Turns})";
     }
 }

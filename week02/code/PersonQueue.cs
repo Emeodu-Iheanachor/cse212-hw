@@ -1,6 +1,5 @@
-/// <summary>
-/// A basic implementation of a Queue
-/// </summary>
+using System.Collections.Generic;
+
 public class PersonQueue
 {
     private readonly List<Person> _queue = new();
@@ -8,14 +7,16 @@ public class PersonQueue
     public int Length => _queue.Count;
 
     /// <summary>
-    /// Add a person to the queue
+    /// Add a person to the BACK of the queue (FIFO behavior)
     /// </summary>
-    /// <param name="person">The person to add</param>
     public void Enqueue(Person person)
     {
-        _queue.Insert(0, person);
+        _queue.Add(person);
     }
 
+    /// <summary>
+    /// Remove and return the person at the FRONT of the queue
+    /// </summary>
     public Person Dequeue()
     {
         var person = _queue[0];
@@ -23,9 +24,12 @@ public class PersonQueue
         return person;
     }
 
+    /// <summary>
+    /// Check if queue is empty
+    /// </summary>
     public bool IsEmpty()
     {
-        return Length == 0;
+        return _queue.Count == 0;
     }
 
     public override string ToString()

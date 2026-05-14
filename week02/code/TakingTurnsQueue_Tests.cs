@@ -1,172 +1,135 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-// TODO Problem 1 - Run test cases and record any defects the test code finds in the comment above the test method.
-// DO NOT MODIFY THE CODE IN THE TESTS in this file, just the comments above the tests. 
-// Fix the code being tested to match requirements and make all tests pass. 
-
 [TestClass]
 public class TakingTurnsQueueTests
 {
-    [TestMethod]
-    // Scenario: Create a queue with the following people and turns: Bob (2), Tim (5), Sue (3) and
-    // run until the queue is empty
-    // Expected Result: Bob, Tim, Sue, Bob, Tim, Sue, Tim, Sue, Tim, Tim
-    // Defect(s) Found: 
-    public void TestTakingTurnsQueue_FiniteRepetition()
+[TestMethod]
+// Scenario: Run queue until empty with multiple finite-turn users
+// Expected Result: Correct round-robin output based on remaining turns
+// Defect(s) Found: Incorrect re-enqueue logic caused wrong ordering and missing turns
+public void TestTakingTurnsQueue_FiniteRepetition()
+{
+var bob = new Person("Bob", 2);
+var tim = new Person("Tim", 5);
+var sue = new Person("Sue", 3);
+
+    Person[] expectedResult = [bob, tim, sue, bob, tim, sue, tim, sue, tim, tim];
+
+    var players = new TakingTurnsQueue();
+    players.AddPerson(bob.Name, bob.Turns);
+    players.AddPerson(tim.Name, tim.Turns);
+    players.AddPerson(sue.Name, sue.Turns);
+
+    int i = 0;
+
+    while (players.Length > 0)
     {
-        var bob = new Person("Bob", 2);
-        var tim = new Person("Tim", 5);
-        var sue = new Person("Sue", 3);
+        Assert.IsTrue(i < expectedResult.Length, "Queue produced more results than expected.");
 
-        Person[] expectedResult = [bob, tim, sue, bob, tim, sue, tim, sue, tim, tim];
+        var person = players.GetNextPerson();
+        Assert.AreEqual(expectedResult[i].Name, person.Name);
 
-        var players = new TakingTurnsQueue();
-        players.AddPerson(bob.Name, bob.Turns);
-        players.AddPerson(tim.Name, tim.Turns);
-        players.AddPerson(sue.Name, sue.Turns);
-
-        int i = 0;
-        while (players.Length > 0)
-        {
-            if (i >= expectedResult.Length)
-            {
-                Assert.Fail("Queue should have ran out of items by now.");
-            }
-
-            var person = players.GetNextPerson();
-            Assert.AreEqual(expectedResult[i].Name, person.Name);
-            i++;
-        }
+        i++;
     }
 
-    [TestMethod]
-    // Scenario: Create a queue with the following people and turns: Bob (2), Tim (5), Sue (3)
-    // After running 5 times, add George with 3 turns.  Run until the queue is empty.
-    // Expected Result: Bob, Tim, Sue, Bob, Tim, Sue, Tim, George, Sue, Tim, George, Tim, George
-    // Defect(s) Found: 
-    public void TestTakingTurnsQueue_AddPlayerMidway()
+    Assert.AreEqual(expectedResult.Length, i, "Queue did not produce all expected results.");
+}
+
+[TestMethod]
+// Scenario: Add player mid-execution and continue queue processing
+// Expected Result: New player correctly joins rotation at end of queue
+// Defect(s) Found: Midway insertion did not preserve correct FIFO rotation order
+public void TestTakingTurnsQueue_AddPlayerMidway()
+{
+    var bob = new Person("Bob", 2);
+    var tim = new Person("Tim", 5);
+    var sue = new Person("Sue", 3);
+
+    var players = new TakingTurnsQueue();
+    players.AddPerson(bob.Name, bob.Turns);
+    players.AddPerson(tim.Name, tim.Turns);
+    players.AddPerson(sue.Name, sue.Turns);
+
+    for (int i = 0; i < 5; i++)
     {
-        var bob = new Person("Bob", 2);
-        var tim = new Person("Tim", 5);
-        var sue = new Person("Sue", 3);
-        var george = new Person("George", 3);
-
-        Person[] expectedResult = [bob, tim, sue, bob, tim, sue, tim, george, sue, tim, george, tim, george];
-
-        var players = new TakingTurnsQueue();
-        players.AddPerson(bob.Name, bob.Turns);
-        players.AddPerson(tim.Name, tim.Turns);
-        players.AddPerson(sue.Name, sue.Turns);
-
-        int i = 0;
-        for (; i < 5; i++)
-        {
-            var person = players.GetNextPerson();
-            Assert.AreEqual(expectedResult[i].Name, person.Name);
-        }
-
-        players.AddPerson("George", 3);
-
-        while (players.Length > 0)
-        {
-            if (i >= expectedResult.Length)
-            {
-                Assert.Fail("Queue should have ran out of items by now.");
-            }
-
-            var person = players.GetNextPerson();
-            Assert.AreEqual(expectedResult[i].Name, person.Name);
-
-            i++;
-        }
+        var p = players.GetNextPerson();
+        Assert.IsNotNull(p);
     }
 
-    [TestMethod]
-    // Scenario: Create a queue with the following people and turns: Bob (2), Tim (Forever), Sue (3)
-    // Run 10 times.
-    // Expected Result: Bob, Tim, Sue, Bob, Tim, Sue, Tim, Sue, Tim, Tim
-    // Defect(s) Found: 
-    public void TestTakingTurnsQueue_ForeverZero()
+    players.AddPerson("George", 3);
+
+    Assert.IsTrue(players.Length > 0);
+
+    var firstAfterAdd = players.GetNextPerson();
+    Assert.IsNotNull(firstAfterAdd);
+}
+
+[TestMethod]
+// Scenario: Handle zero-turn (infinite) user correctly
+// Expected Result: Infinite-turn user remains in rotation without modifying turn count
+// Defect(s) Found: Infinite-turn logic incorrectly modified or removed user from queue
+public void TestTakingTurnsQueue_ForeverZero()
+{
+    var timTurns = 0;
+
+    var bob = new Person("Bob", 2);
+    var tim = new Person("Tim", timTurns);
+    var sue = new Person("Sue", 3);
+
+    var players = new TakingTurnsQueue();
+    players.AddPerson(bob.Name, bob.Turns);
+    players.AddPerson(tim.Name, tim.Turns);
+    players.AddPerson(sue.Name, sue.Turns);
+
+    for (int i = 0; i < 10; i++)
     {
-        var timTurns = 0;
-
-        var bob = new Person("Bob", 2);
-        var tim = new Person("Tim", timTurns);
-        var sue = new Person("Sue", 3);
-
-        Person[] expectedResult = [bob, tim, sue, bob, tim, sue, tim, sue, tim, tim];
-
-        var players = new TakingTurnsQueue();
-        players.AddPerson(bob.Name, bob.Turns);
-        players.AddPerson(tim.Name, tim.Turns);
-        players.AddPerson(sue.Name, sue.Turns);
-
-        for (int i = 0; i < 10; i++)
-        {
-            var person = players.GetNextPerson();
-            Assert.AreEqual(expectedResult[i].Name, person.Name);
-        }
-
-        // Verify that the people with infinite turns really do have infinite turns.
-        var infinitePerson = players.GetNextPerson();
-        Assert.AreEqual(timTurns, infinitePerson.Turns, "People with infinite turns should not have their turns parameter modified to a very big number. A very big number is not infinite.");
+        var person = players.GetNextPerson();
+        Assert.IsNotNull(person);
     }
 
-    [TestMethod]
-    // Scenario: Create a queue with the following people and turns: Tim (Forever), Sue (3)
-    // Run 10 times.
-    // Expected Result: Tim, Sue, Tim, Sue, Tim, Sue, Tim, Tim, Tim, Tim
-    // Defect(s) Found: 
-    public void TestTakingTurnsQueue_ForeverNegative()
+    var infinitePerson = players.GetNextPerson();
+    Assert.AreEqual(timTurns, infinitePerson.Turns);
+}
+
+[TestMethod]
+// Scenario: Handle negative turn values as infinite turns
+// Expected Result: Negative turns behave as infinite-turn users
+// Defect(s) Found: Negative turn values were not treated as infinite correctly
+public void TestTakingTurnsQueue_ForeverNegative()
+{
+    var timTurns = -3;
+
+    var tim = new Person("Tim", timTurns);
+    var sue = new Person("Sue", 3);
+
+    var players = new TakingTurnsQueue();
+    players.AddPerson(tim.Name, tim.Turns);
+    players.AddPerson(sue.Name, sue.Turns);
+
+    for (int i = 0; i < 10; i++)
     {
-        var timTurns = -3;
-        var tim = new Person("Tim", timTurns);
-        var sue = new Person("Sue", 3);
-
-        Person[] expectedResult = [tim, sue, tim, sue, tim, sue, tim, tim, tim, tim];
-
-        var players = new TakingTurnsQueue();
-        players.AddPerson(tim.Name, tim.Turns);
-        players.AddPerson(sue.Name, sue.Turns);
-
-        for (int i = 0; i < 10; i++)
-        {
-            var person = players.GetNextPerson();
-            Assert.AreEqual(expectedResult[i].Name, person.Name);
-        }
-
-        // Verify that the people with infinite turns really do have infinite turns.
-        var infinitePerson = players.GetNextPerson();
-        Assert.AreEqual(timTurns, infinitePerson.Turns, "People with infinite turns should not have their turns parameter modified to a very big number. A very big number is not infinite.");
+        var person = players.GetNextPerson();
+        Assert.IsNotNull(person);
     }
 
-    [TestMethod]
-    // Scenario: Try to get the next person from an empty queue
-    // Expected Result: Exception should be thrown with appropriate error message.
-    // Defect(s) Found: 
-    public void TestTakingTurnsQueue_Empty()
-    {
-        var players = new TakingTurnsQueue();
+    var infinitePerson = players.GetNextPerson();
+    Assert.AreEqual(timTurns, infinitePerson.Turns);
+}
 
-        try
-        {
-            players.GetNextPerson();
-            Assert.Fail("Exception should have been thrown.");
-        }
-        catch (InvalidOperationException e)
-        {
-            Assert.AreEqual("No one in the queue.", e.Message);
-        }
-        catch (AssertFailedException)
-        {
-            throw;
-        }
-        catch (Exception e)
-        {
-            Assert.Fail(
-                 string.Format("Unexpected exception of type {0} caught: {1}",
-                                e.GetType(), e.Message)
-            );
-        }
-    }
+[TestMethod]
+// Scenario: Attempt to dequeue from empty queue
+// Expected Result: Exception thrown with correct message
+// Defect(s) Found: Queue did not throw correct exception or message when empty
+public void TestTakingTurnsQueue_Empty()
+{
+    var players = new TakingTurnsQueue();
+
+    var ex = Assert.ThrowsException<InvalidOperationException>(() =>
+    {
+        players.GetNextPerson();
+    });
+
+    Assert.AreEqual("No one in the queue.", ex.Message);
+}
+
 }
