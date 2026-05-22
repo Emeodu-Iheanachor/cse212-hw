@@ -1,57 +1,82 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 
 public class PriorityQueue
 {
-    private class Item
-    {
-        public string Value;
-        public int Priority;
-        public int Order;
+    private List<PriorityItem> _queue = new();
 
-        public Item(string value, int priority, int order)
-        {
-            Value = value;
-            Priority = priority;
-            Order = order;
-        }
-    }
-
-    private readonly List<Item> _items = new();
-    private int _orderCounter = 0;
-
+    /// <summary>
+    /// Add a new value to the queue with an associated priority.
+    /// The node is always added to the back of the queue regardless
+    /// of the priority.
+    /// </summary>
+    /// <param name="value">The value</param>
+    /// <param name="priority">The priority</param>
     public void Enqueue(string value, int priority)
     {
-        _items.Add(new Item(value, priority, _orderCounter++));
+        var newNode = new PriorityItem(value, priority);
+        _queue.Add(newNode);
     }
 
+    /// <summary>
+    /// Remove and return the item with the highest priority.
+    /// If multiple items have the same priority, return the one
+    /// closest to the front of the queue.
+    /// </summary>
+    /// <returns>The value of the removed item</returns>
     public string Dequeue()
     {
-        if (_items.Count == 0)
-            throw new InvalidOperationException("The queue is empty.");
-
-        int bestIndex = 0;
-
-        for (int i = 1; i < _items.Count; i++)
+        // Requirement #4
+        if (_queue.Count == 0)
         {
-            var current = _items[i];
-            var best = _items[bestIndex];
+            throw new InvalidOperationException("The queue is empty.");
+        }
 
-            // higher priority wins
-            if (current.Priority > best.Priority)
+        // Start by assuming first item has highest priority
+        int highestPriorityIndex = 0;
+
+        // Find highest priority item
+        for (int i = 1; i < _queue.Count; i++)
+        {
+            // Use > so first matching highest priority remains first (FIFO)
+            if (_queue[i].Priority > _queue[highestPriorityIndex].Priority)
             {
-                bestIndex = i;
-            }
-            // same priority → FIFO (earlier insertion wins)
-            else if (current.Priority == best.Priority &&
-                     current.Order < best.Order)
-            {
-                bestIndex = i;
+                highestPriorityIndex = i;
             }
         }
 
-        var item = _items[bestIndex];
-        _items.RemoveAt(bestIndex);
-        return item.Value;
+        string value = _queue[highestPriorityIndex].Value;
+
+        _queue.RemoveAt(highestPriorityIndex);
+
+        return value;
+    }
+
+    // DO NOT MODIFY THE CODE IN THIS METHOD
+    // The graders rely on this method to check if you fixed all the bugs,
+    // so changes to it will cause you to lose points.
+    public override string ToString()
+    {
+        return $"[{string.Join(", ", _queue)}]";
+    }
+}
+
+internal class PriorityItem
+{
+    internal string Value { get; set; }
+    internal int Priority { get; set; }
+
+    internal PriorityItem(string value, int priority)
+    {
+        Value = value;
+        Priority = priority;
+    }
+
+    // DO NOT MODIFY THE CODE IN THIS METHOD
+    // The graders rely on this method to check if you fixed all the bugs,
+    // so changes to it will cause you to lose points.
+    public override string ToString()
+    {
+        return $"{Value} (Pri:{Priority})";
     }
 }

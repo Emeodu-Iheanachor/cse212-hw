@@ -4,35 +4,48 @@ public class TakingTurnsQueue
 {
     private readonly PersonQueue _people = new();
 
+    // Needed by the tests
     public int Length => _people.Length;
 
+    /// <summary>
+    /// Add a person into the queue.
+    /// </summary>
     public void AddPerson(string name, int turns)
     {
-        _people.Enqueue(new Person(name, turns));
+        Person person = new Person(name, turns);
+        _people.Enqueue(person);
     }
 
+    /// <summary>
+    /// Remove and return the next person.
+    /// Re-add them if they still have turns remaining
+    /// or if they have infinite turns (0 or less).
+    /// </summary>
     public Person GetNextPerson()
     {
-        if (_people.IsEmpty())
+        if (_people.Length == 0)
+        {
             throw new InvalidOperationException("No one in the queue.");
-
-        Person person = _people.Dequeue();
-
-        // Infinite turns (0 or negative)
-        if (person.Turns <= 0)
-        {
-            _people.Enqueue(person);
-            return person;
         }
 
-        // Finite turns
-        person.Turns--;
+        Person current = _people.Dequeue();
 
-        if (person.Turns > 0)
+        // Infinite turns
+        if (current.Turns <= 0)
         {
-            _people.Enqueue(person);
+            _people.Enqueue(current);
+        }
+        else
+        {
+            current.Turns--;
+
+            // Re-add only if turns remain
+            if (current.Turns > 0)
+            {
+                _people.Enqueue(current);
+            }
         }
 
-        return person;
+        return current;
     }
 }

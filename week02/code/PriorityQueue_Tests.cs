@@ -1,75 +1,126 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+
+// TODO Problem 2 - Write and run test cases and fix the code to match requirements.
 
 [TestClass]
 public class PriorityQueueTests
 {
-[TestMethod]
-// Scenario: Highest priority item should always be dequeued first
-// Expected Result: Item with highest priority is returned
-// Defect(s) Found: Incorrect comparison logic caused wrong item selection
-public void TestPriorityQueue_HighestPriority()
-{
-var queue = new PriorityQueue();
+    [TestMethod]
 
-    queue.Enqueue("Bob", 1);
-    queue.Enqueue("Tim", 5);
-    queue.Enqueue("Sue", 3);
+    // Scenario:
+    // Add several items with different priorities.
+    // Remove one item from the queue.
+    //
+    // Expected Result:
+    // The item with the highest priority should be removed first.
+    //
+    // Defect(s) Found:
+    // Original code removed the first item in the queue instead of
+    // searching for the highest priority item.
 
-    var result = queue.Dequeue();
-
-    Assert.AreEqual("Tim", result);
-}
-
-[TestMethod]
-// Scenario: Items with equal highest priority should follow FIFO order
-// Expected Result: First inserted item among same priority values is removed first
-// Defect(s) Found: FIFO ordering not preserved for equal priority items
-public void TestPriorityQueue_FIFO_SamePriority()
-{
-    var queue = new PriorityQueue();
-
-    queue.Enqueue("Bob", 5);
-    queue.Enqueue("Tim", 5);
-    queue.Enqueue("Sue", 5);
-
-    Assert.AreEqual("Bob", queue.Dequeue());
-    Assert.AreEqual("Tim", queue.Dequeue());
-    Assert.AreEqual("Sue", queue.Dequeue());
-}
-
-[TestMethod]
-// Scenario: Verify full priority ordering across multiple dequeues
-// Expected Result: Items come out in descending priority order
-// Defect(s) Found: Queue did not maintain ordering after multiple operations
-public void TestPriorityQueue_MultipleDequeue()
-{
-    var queue = new PriorityQueue();
-
-    queue.Enqueue("A", 2);
-    queue.Enqueue("B", 10);
-    queue.Enqueue("C", 5);
-    queue.Enqueue("D", 10);
-
-    Assert.AreEqual("B", queue.Dequeue());
-    Assert.AreEqual("D", queue.Dequeue());
-    Assert.AreEqual("C", queue.Dequeue());
-    Assert.AreEqual("A", queue.Dequeue());
-}
-
-[TestMethod]
-// Scenario: Attempt to dequeue from empty queue
-// Expected Result: InvalidOperationException with correct message
-// Defect(s) Found: Queue did not properly handle empty state exception
-public void TestPriorityQueue_Empty()
-{
-    var queue = new PriorityQueue();
-
-    var ex = Assert.ThrowsException<InvalidOperationException>(() =>
+    // Test Case: Verify highest priority item is removed first.
+    // Expected Result: Highest priority value returned.
+    // Test Result: Failed initially because queue removed first item instead
+    // of highest priority item.
+    // Fix Applied: Updated Dequeue logic to search the queue for the
+    // highest priority item before removing.
+    public void TestPriorityQueue_1()
     {
-        queue.Dequeue();
-    });
+        PriorityQueue queue = new();
 
-    Assert.AreEqual("The queue is empty.", ex.Message);
-}
+        queue.Enqueue("A", 1);
+        queue.Enqueue("B", 5);
+        queue.Enqueue("C", 3);
 
+        Assert.AreEqual("B", queue.Dequeue());
+    }
+
+    [TestMethod]
+
+    // Scenario:
+    // Add multiple items with the same highest priority.
+    // Remove items from the queue.
+    //
+    // Expected Result:
+    // The item inserted first among equal priorities should be removed first
+    // following FIFO order.
+    //
+    // Defect(s) Found:
+    // Original implementation did not correctly verify FIFO behavior
+    // for matching priorities.
+
+    // Test Case: Verify FIFO order for same priority.
+    // Expected Result: First inserted item with same priority removed first.
+    // Test Result: Failed initially because FIFO behavior was not tested.
+    // Fix Applied: Added FIFO test case and corrected queue logic.
+    public void TestPriorityQueue_2()
+    {
+        PriorityQueue queue = new();
+
+        queue.Enqueue("A", 5);
+        queue.Enqueue("B", 5);
+        queue.Enqueue("C", 5);
+
+        Assert.AreEqual("A", queue.Dequeue());
+        Assert.AreEqual("B", queue.Dequeue());
+        Assert.AreEqual("C", queue.Dequeue());
+    }
+
+    [TestMethod]
+
+    // Scenario:
+    // Attempt to dequeue from an empty queue.
+    //
+    // Expected Result:
+    // An InvalidOperationException should be thrown with the message
+    // "The queue is empty."
+    //
+    // Defect(s) Found:
+    // Exception handling for empty queue was missing or incorrect.
+
+    // Test Case: Verify empty queue throws exception.
+    // Expected Result: InvalidOperationException thrown.
+    // Test Result: Passed after adding proper exception handling.
+    // Fix Applied: Added InvalidOperationException in Dequeue method.
+    public void TestPriorityQueue_Empty()
+    {
+        PriorityQueue queue = new();
+
+        Exception ex = Assert.ThrowsException<InvalidOperationException>(
+            () => queue.Dequeue()
+        );
+
+        Assert.AreEqual("The queue is empty.", ex.Message);
+    }
+
+    [TestMethod]
+
+    // Scenario:
+    // Add items in mixed priority order and remove all items.
+    //
+    // Expected Result:
+    // Items should always be removed from highest priority to lowest priority.
+    //
+    // Defect(s) Found:
+    // Original implementation did not consistently remove highest priorities.
+
+    // Test Case: Verify ordering across multiple priorities.
+    // Expected Result: Items dequeued in proper priority order.
+    // Test Result: Failed before fixing Dequeue logic.
+    // Fix Applied: Corrected search for highest priority item.
+    public void TestPriorityQueue_3()
+    {
+        PriorityQueue queue = new();
+
+        queue.Enqueue("Low", 1);
+        queue.Enqueue("Medium", 3);
+        queue.Enqueue("High", 10);
+        queue.Enqueue("Higher", 7);
+
+        Assert.AreEqual("High", queue.Dequeue());
+        Assert.AreEqual("Higher", queue.Dequeue());
+        Assert.AreEqual("Medium", queue.Dequeue());
+        Assert.AreEqual("Low", queue.Dequeue());
+    }
 }
